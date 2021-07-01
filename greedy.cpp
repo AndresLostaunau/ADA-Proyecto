@@ -1,9 +1,10 @@
+#include <iostream>
 #include <vector>
 using namespace std;
 
 struct Answer{
     vector<string> sptrie;
-    int edges;
+    int edges = 0;
 };
 
 void print(Answer ans){                           // O(mn)
@@ -20,7 +21,7 @@ int build_strie(vector<string>* input){                      // O(mn)
     int removed_edge_counter = 0;
     char current_char = ' ';
     for(int i = 0; i < input->size(); i++){
-        for(int j = 0; j < input[0].size(); j++){
+        for(int j = 0; j < (*input)[0].size(); j++){
             if((*input)[i][j] != current_char){
                 current_char = (*input)[i][j];
             }else if(i - 1 < 0) {
@@ -39,13 +40,13 @@ int build_strie(vector<string>* input){                      // O(mn)
 void merge(vector<int>* score_vec, vector<string>* input, int l, int mid, int r){
     vector<int> lArray, rArray, orderedArray;
     vector<string> lMatrixArray, rMatrixArray, orderedMatrixArray;
-    for(int i = l; i < mid; i++){
+    for(int i = l; i < mid+1; i++){
         lArray.push_back((*score_vec)[i]);
         lMatrixArray.push_back((*input)[i]);
     }
     for(int i = mid; i < r; i++){
-        rArray.push_back((*score_vec)[i]);
-        rMatrixArray.push_back((*input)[i]);
+        rArray.push_back((*score_vec)[i+1]);
+        rMatrixArray.push_back((*input)[i+1]);
     }
     int rIndex = 0, lIndex = 0;
     while(lIndex != lArray.size() || rIndex != rArray.size()){
@@ -59,7 +60,7 @@ void merge(vector<int>* score_vec, vector<string>* input, int l, int mid, int r)
             rIndex++;
         }
     }
-    for(int i = l; i < r; i++){
+    for(int i = l; i <= r; i++){
         (*score_vec)[i] = orderedArray[i-l];
         (*input)[i] = orderedMatrixArray[i-l];
     }
@@ -106,7 +107,8 @@ vector<int> get_score(vector<string> t_matrix){
 
 void sort(vector<string> *t_matrix){
     vector<int> score_vec = get_score(*t_matrix);
-    merge_sort_matrix(&score_vec,t_matrix,0,t_matrix->size());                     // O(mlg(m))
+    merge_sort_matrix(&score_vec,t_matrix,0,t_matrix->size()-1);                     // O(mlg(m))
+    int a = 3;
 }
 
 Answer greedy_algorithm(vector<string> const input){
