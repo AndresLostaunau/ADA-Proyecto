@@ -3,6 +3,7 @@
 #include "recursive.cpp"
 #include "memoized.cpp"
 #include "dynamic.cpp"
+#include "parser.cpp"
 
 void test(vector<string> const &input){
     AnswerD ans = dynamic_algorithm(input);
@@ -12,8 +13,8 @@ void test(vector<string> const &input){
 void write_test(vector<string> const &input){
     AnswerD ans = dynamic_algorithm(input);
     fstream outfile;
-    outfile.open("C:\\Users\\alost\\OneDrive\\Escritorio\\ADA 2021-1\\Proyecto\\ADA-Proyecto\\out.txt");
-    for(auto it:ans.sptrie){
+    outfile.open("out.txt");
+    for(auto const &it:ans.sptrie){
         outfile<<it<<'\n';
     }
     /*cout<<"Permutacion: (";
@@ -43,13 +44,15 @@ void text_test(string filename){
 
 int main() {
     // Standard case
-    //text_test("C:\\Users\\alost\\OneDrive\\Escritorio\\ADA 2021-1\\Proyecto\\ADA-Proyecto\\inMed.txt");
+    //text_test("inMed.txt");
     //test({"jlzrkxp","jrbrkze","shhyfzc","ghhbwzc","ahvbozc"});
     // Best case
-    //test({"aaa","baa","cba","dba"});aaa","bab","cab","cbb","dcb","dcc"
+    //test({"aaa","baa","cba","dba"});"aaa","bab","cab","cbb","dcb","dcc"
     // Custom input
-    //test({"bac","aab","cab","cbb"});
+    //test({"aaa","bab","cab","cbb","dcb","dcc"});
     //test();
-    dynamic_algorithm({"jlzrkxp","jrbrkze","shhyfzc","ghhbwzc","ahvbozc"}).print();
+    //auto ans2 = greedy_algorithm({"cba","cdb"});
+    //auto ans = heuristic_compilation("prologfile.txt");
+    compiler("prologfile.txt","query.txt");
     return 0;
 }

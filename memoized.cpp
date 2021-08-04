@@ -53,17 +53,14 @@ void memoized_algorithm(vector<string> const &input){
     vector<vector<vector<int>>> R;
     vector<vector<vector<int>>> K;
     vector<vector<int>> V;
-    vector<vector<vector<pair<int,int>>>> C;
 
     for(int i=0; i < input.size(); i++){            //n*n*m
         R.emplace_back(vector<vector<int>>());
         K.emplace_back(vector<vector<int>>());
         V.emplace_back(vector<int>());
-        C.emplace_back(vector<vector<pair<int,int>>>());
         for(int j = 0; j < i+1; j++) {
             R[i].emplace_back(vector<int>());
             K[i].emplace_back(vector<int>());
-            C[i].emplace_back(vector<pair<int,int>>());
             V[i].push_back(-1);
             for(int k=0; k < input[0].size(); k++){
                 if(input[i][k]==input[j][k]){

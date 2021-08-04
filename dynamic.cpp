@@ -33,7 +33,7 @@ struct AnswerD{
     }
 
     void setperm(int p){
-        for(int i = 0; i < this->sptrie.size(); i++){
+        for(int i = 0; i < this->sptrie[0].size(); i++){
             this->perm[0][i] = p;
         }
     }
@@ -91,7 +91,7 @@ vector<pair<int,int>> findd_route(int i, int j, vector<vector<vector<int>>> cons
 
 AnswerD optimal(vector<string> const &input, int i, int j
         , vector<vector<vector<int>>> const &K, vector<vector<vector<int>>> const &R
-        , vector<vector<AnswerD*>> &V
+        //, vector<vector<AnswerD*>> &V
         , int pos
         , vector<int> remVec){
     /*if(V[j][i]->edges != -1){
@@ -113,12 +113,12 @@ AnswerD optimal(vector<string> const &input, int i, int j
         auto candidate = find(remVec.begin(),remVec.end(),it);
         if(candidate!=remVec.end()){
             remVec.erase(find(remVec.begin(),remVec.end(),it));
-            auto o = optimal(input,i,j,K,R,V,pos+1,remVec);
+            auto o = optimal(input,i,j,K,R,pos+1,remVec);
             ans->add(o,0,1);
             ans->sptrie[0][0] = input[i][it];
             ans->setperm(it);
             ans->edges = o.edges;
-            V[j][i] = ans;
+            //V[j][i] = ans;
             return *ans;
         }
     }
@@ -129,7 +129,7 @@ AnswerD optimal(vector<string> const &input, int i, int j
         ans_copy = *ans;
         auto route = findd_route(i,j,K,a);
         for(auto it:route){                                     //n*m
-            auto lel = optimal(input,it.first,it.second,K,R,V,pos,remVec);
+            auto lel = optimal(input,it.first,it.second,K,R,pos,remVec);
             sum += lel.edges + K[it.second][it.first].size() - K[j][i].size();
             ans_copy.add(lel,it.first-i,0);
         }
@@ -141,23 +141,23 @@ AnswerD optimal(vector<string> const &input, int i, int j
     }
     min_ans.edges=min;
     *ans = min_ans;
-    V[j][i]=ans;
+    //V[j][i]=ans;
     return *ans;
 }
 
 AnswerD dynamic_algorithm(vector<string> const &input){
     vector<vector<vector<int>>> R;
     vector<vector<vector<int>>> K;
-    vector<vector<AnswerD*>> V;
+    //vector<vector<AnswerD*>> V;
     vector<int> remVec;
     for(int i=0; i < input.size(); i++){            //n*n*m
         R.emplace_back(vector<vector<int>>());
         K.emplace_back(vector<vector<int>>());
-        V.emplace_back(vector<AnswerD*>());
+        //V.emplace_back(vector<AnswerD*>());
         for(int j = 0; j < i+1; j++) {
             R[i].emplace_back(vector<int>());
             K[i].emplace_back(vector<int>());
-            V[i].emplace_back(new AnswerD);
+            //V[i].emplace_back(new AnswerD);
             for(int k=0; k < input[0].size(); k++){
                 if(input[i][k]==input[j][k]){
                     K[i][j].emplace_back(k);
@@ -170,7 +170,7 @@ AnswerD dynamic_algorithm(vector<string> const &input){
     for(int i = 0; i < input[0].size(); i++){
         remVec.push_back(i);
     }
-    auto ans = optimal(input,0,input.size()-1,K,R,V,0,remVec);
+    auto ans = optimal(input,0,input.size()-1,K,R,0,remVec);
     return ans;
 }
 
