@@ -1,5 +1,6 @@
 #include <fstream>
 #include <map>
+#include <chrono>
 using namespace std;
 
 struct rule{
@@ -17,42 +18,93 @@ struct query{
     query(string const &identifier, string const &sequence, int varPos) : identifier(identifier), sequence(sequence),
                                                                           var_pos(varPos) {};
 
-    void execute_query(Answer ans){
+    void do_query(Answer ans){
         auto sptrie = ans.sptrie;
         auto perm = ans.perm;
         auto candidate_vec = vector<bool>();
         auto value_vec = vector<char>();
+        string shuffled_query;
+        for(auto it2:ans.perm){
+            shuffled_query += sequence[it2];
+        }
         for(int i = 0; i < sptrie[0].size(); i++){
             candidate_vec.push_back(true);
+            value_vec.push_back('\0');
         }
-        for(auto const &sp:sptrie){
-            for(int i = 0; i < sptrie[0].size(); i++){
-                if(candidate_vec[i]){
-                    if(sequence[i]=='X'){
-
+        for(int i = 0; i < sptrie.size(); i++){
+            for(int j = 0; j < sptrie[0].size(); j++){
+                if(candidate_vec[j]){
+                    if(shuffled_query[i]=='X'){
+                        bool invalid_value = true;
+                        int value_finder = j;
+                        do{
+                            if(sptrie[i][value_finder] == '@'){
+                                value_finder--;
+                            }else{
+                                value_vec[j] = sptrie[i][value_finder];
+                                invalid_value = false;
+                            }
+                        }while(invalid_value);
+                    }else if(sptrie[i][j] == '@') {
+                        candidate_vec[j] = candidate_vec[j-1];
+                    }else if(shuffled_query[i] != sptrie[i][j]){
+                        candidate_vec[j] = false;
                     }
                 }
             }
         }
+        for(int i = 0; i < candidate_vec.size(); i++){
+            if(candidate_vec[i]){
+                cout<<"X="<<value_vec[i]<<",";
+            }
+        }
+        cout<<'\n';
     }
 
-    void execute_query(AnswerD ans){
+    void do_query(AnswerD ans){
         auto sptrie = ans.sptrie;
         auto perm = ans.perm;
         auto candidate_vec = vector<bool>();
         auto value_vec = vector<char>();
+        vector<string> shuffled_query;
+        for(int i = 0; i< ans.perm.size(); i++){
+            shuffled_query.emplace_back(string());
+            for(int j = 0; j < ans.perm[0].size(); j++){
+                shuffled_query[i] += sequence[perm[i][j]];
+            }
+        }
         for(int i = 0; i < sptrie[0].size(); i++){
             candidate_vec.push_back(true);
+            value_vec.push_back('\0');
         }
-        for(auto const &sp:sptrie){
-            for(int i = 0; i < sptrie[0].size(); i++){
-                if(candidate_vec[i]){
-                    if(sequence[i]=='X'){
-
+        for(int i = 0; i < sptrie.size(); i++){
+            for(int j = 0; j < sptrie[0].size(); j++){
+                if(candidate_vec[j]){
+                    if(shuffled_query[i][j]=='X'){
+                        bool invalid_value = true;
+                        int value_finder = j;
+                        do{
+                            if(sptrie[i][value_finder] == '@'){
+                                value_finder--;
+                            }else{
+                                value_vec[j] = sptrie[i][value_finder];
+                                invalid_value = false;
+                            }
+                        }while(invalid_value);
+                    }else if(sptrie[i][j] == '@') {
+                        candidate_vec[j] = candidate_vec[j-1];
+                    }else if(shuffled_query[i][j] != sptrie[i][j]){
+                        candidate_vec[j] = false;
                     }
                 }
             }
         }
+        for(int i = 0; i < candidate_vec.size(); i++){
+            if(candidate_vec[i]){
+                cout<<"X="<<value_vec[i]<<",";
+            }
+        }
+        cout<<'\n';
     }
 };
 
@@ -64,25 +116,24 @@ vector<rule> parse(string const &filename){
     vector<rule> ans = vector<rule>();
     file.open(filename);
     while(file.get(c)){
-        if(c == '\n'){
-            continue;
-        }else if(state == 0){
-            if(c == '('){
+        if(state == 0){
+            if(c == ' '){
                 state=1;
             }else{
                 identifier+=c;
             }
-        }else if(state == 1){
-            if(c == ')'){
+        }else{
+            if(c == '\n'){
                 ans.emplace_back(rule(identifier,sequence));
                 identifier.clear();
                 sequence.clear();
-                state=0;
-            }else if(c != ','){
+                state = 0;
+            }else{
                 sequence+=c;
             }
         }
     }
+    ans.emplace_back(rule(identifier,sequence));
     return ans;
 }
 
@@ -94,29 +145,28 @@ vector<query> query_parse(string const &filename){
     vector<query> ans = vector<query>();
     file.open(filename);
     while(file.get(c)){
-        if(c == '\n'){
-            continue;
-        }else if(state == 0){
-            if(c == '('){
+        if(state == 0){
+            if(c == ' '){
                 state=1;
             }else{
                 identifier+=c;
             }
-        }else if(state == 1){
-            if(c == ')'){
+        }else{
+            if(c == '\n'){
                 ans.emplace_back(query(identifier,sequence,var_pos));
                 identifier.clear();
                 sequence.clear();
-                state=0;
+                state = 0;
             }else if(c == 'X'){
                 sequence+=c;
                 var_pos = pos;
-            }else if(c != ','){
+            }else{
                 sequence+=c;
                 pos++;
             }
         }
     }
+    ans.emplace_back(query(identifier,sequence,var_pos));
     return ans;
 }
 
@@ -173,44 +223,15 @@ void compiler(string const &rule_filename, string const &query_filename){
             cout<<"Ingrese una opcion valida.\n";
         }
     }while(!valid_answer);
+    auto start = chrono::system_clock::now();
     if(value==1){
         auto ans = heuristic_compilation(rule_filename);
         auto queries = query_parse(query_filename);
         for(auto it:queries){
             auto query_ans = ans.find(it.identifier);
-            if(query_ans != ans.end()){
-                auto sptrie = query_ans->second.sptrie;
-                auto perm = query_ans->second.perm;
-                auto candidate_vec = vector<bool>();
-                auto value_vec = vector<char>();
-                string shuffled_query;
-                for(auto it2:query_ans->second.perm){
-                    shuffled_query += it.sequence[it2];
-                }
-                for(int i = 0; i < sptrie[0].size(); i++){
-                    candidate_vec.push_back(true);
-                    value_vec.push_back('\0');
-                }
-                for(int i = 0; i < sptrie.size(); i++){
-                    for(int j = 0; j < sptrie[0].size(); j++){
-                        if(candidate_vec[j]){
-                            if(shuffled_query[i]=='X'){
-                                value_vec[j] = sptrie[i][j];
-                            }else if(sptrie[i][j] == '@') {
-                                candidate_vec[j] = candidate_vec[j-1];
-                            }else if(shuffled_query[i] != sptrie[i][j]){
-                                candidate_vec[j] = false;
-                            }
-                        }
-                    }
-                }
+            if(query_ans != ans.end()) {
                 cout<<query_ans->first<<":\n";
-                for(int i = 0; i < candidate_vec.size(); i++){
-                    if(candidate_vec[i]){
-                        cout<<"X="<<value_vec[i]<<",";
-                    }
-                }
-                cout<<'\n';
+                it.do_query(query_ans->second);
             }
         }
     }else{
@@ -218,43 +239,13 @@ void compiler(string const &rule_filename, string const &query_filename){
         auto queries = query_parse(query_filename);
         for(auto it:queries){
             auto query_ans = ans.find(it.identifier);
-            if(query_ans != ans.end()){
-                auto sptrie = query_ans->second.sptrie;
-                auto perm = query_ans->second.perm;
-                auto candidate_vec = vector<bool>();
-                auto value_vec = vector<char>();
-                vector<string> shuffled_query;
-                for(int i = 0; i<query_ans->second.perm.size(); i++){
-                    shuffled_query.emplace_back(string());
-                    for(int j = 0; j < query_ans->second.perm[0].size(); j++){
-                        shuffled_query[i] += it.sequence[perm[i][j]];
-                    }
-                }
-                for(int i = 0; i < sptrie[0].size(); i++){
-                    candidate_vec.push_back(true);
-                    value_vec.push_back('\0');
-                }
-                for(int i = 0; i < sptrie.size(); i++){
-                    for(int j = 0; j < sptrie[0].size(); j++){
-                        if(candidate_vec[j]){
-                            if(shuffled_query[i][j]=='X'){
-                                value_vec[j] = sptrie[i][j];
-                            }else if(sptrie[i][j] == '@') {
-                                candidate_vec[j] = candidate_vec[j-1];
-                            }else if(shuffled_query[i][j] != sptrie[i][j]){
-                                candidate_vec[j] = false;
-                            }
-                        }
-                    }
-                }
+            if(query_ans != ans.end()) {
                 cout<<query_ans->first<<":\n";
-                for(int i = 0; i < candidate_vec.size(); i++){
-                    if(candidate_vec[i]){
-                        cout<<"X="<<value_vec[i]<<",";
-                    }
-                }
-                cout<<'\n';
+                it.do_query(query_ans->second);
             }
         }
     }
+    auto end = chrono::system_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    cout<<"Tiempo de ejecucion: "<<elapsed.count()<<" ms";
 }

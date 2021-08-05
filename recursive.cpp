@@ -48,16 +48,12 @@ int optimal(vector<string> const &input, int i, int j
 void recursive_algorithm(vector<string> const &input){
     vector<vector<vector<int>>> R;
     vector<vector<vector<int>>> K;
-    vector<vector<vector<pair<int,int>>>> C;
-
     for(int i=0; i < input.size(); i++){            //n*n*m
         R.emplace_back(vector<vector<int>>());
         K.emplace_back(vector<vector<int>>());
-        C.emplace_back(vector<vector<pair<int,int>>>());
         for(int j = 0; j < i+1; j++) {
             R[i].emplace_back(vector<int>());
             K[i].emplace_back(vector<int>());
-            C[i].emplace_back(vector<pair<int,int>>());
             for(int k=0; k < input[0].size(); k++){
                 if(input[i][k]==input[j][k]){
                     K[i][j].emplace_back(k);
